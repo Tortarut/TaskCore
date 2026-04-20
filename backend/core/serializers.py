@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from core import access
+from core import access, workflow
 from core.models import Project, ProjectMember, Task
 from users.serializers import UserSerializer
 
@@ -127,6 +127,12 @@ class TaskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context['request']
         project = validated_data['project']
+        status = validated_data.get('status', workflow.initial_status_for_create())
+        if status != workflow.initial_status_for_create():
+            raise serializers.ValidationError(
+                {'status': 'New tasks must start with status "todo".'},
+            )
+        validated_data['status'] = status
         assignee = validated_data.get('assignee')
         if assignee is not None:
             if not access.user_can_assign_tasks(request.user, project):
@@ -155,4 +161,13 @@ class TaskSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         {'assignee_id': 'Assignee must be the project owner or a project member.'},
                     )
+        new_status = validated_data.get('status', instance.status)
+        ok, err = workflow.validate_status_transition(
+            request.user,
+            instance,
+            instance.status,
+            new_status,
+        )
+        if not ok:
+            raise serializers.ValidationError({'status': err})
         return super().update(instance, validated_data)
