@@ -39,3 +39,12 @@ class CanDeleteTask(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return access.user_can_delete_task(request.user, obj)
+
+
+class CanModifyComment(BasePermission):
+    message = 'Only the comment author or a project manager can modify this comment.'
+
+    def has_object_permission(self, request, view, obj):
+        if obj.author_id == request.user.id:
+            return True
+        return access.user_can_manage_project(request.user, obj.task.project)

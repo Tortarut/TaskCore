@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from core import access, workflow
-from core.models import Project, ProjectMember, Task
+from core.models import Project, ProjectMember, Task, TaskChangeLog, TaskComment
 from users.serializers import UserSerializer
 
 User = get_user_model()
@@ -171,3 +171,31 @@ class TaskSerializer(serializers.ModelSerializer):
         if not ok:
             raise serializers.ValidationError({'status': err})
         return super().update(instance, validated_data)
+
+
+class TaskCommentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True, allow_null=True)
+
+    class Meta:
+        model = TaskComment
+        fields = ('id', 'task', 'author', 'body', 'created_at', 'updated_at')
+        read_only_fields = ('author', 'created_at', 'updated_at')
+
+    def validate_task(self, task):
+        user = self.context['request'].user
+        if not access.accessible_projects(user).filter(pk=task.project_id).exists():
+            raise serializers.ValidationError('No access to this task.')
+        return task
+
+    def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class TaskChangeLogSerializer(serializers.ModelSerializer):
+    actor = UserSerializer(read_only=True, allow_null=True)
+
+    class Meta:
+        model = TaskChangeLog
+        fields = ('id', 'task', 'actor', 'field_name', 'old_value', 'new_value', 'created_at')
+        read_only_fields = fields

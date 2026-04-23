@@ -1,16 +1,23 @@
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from core import access
 from core.filters import TaskFilter
-from core.models import ProjectMember
+from core.models import ProjectMember, Task, TaskChangeLog, TaskComment
 from core.permissions import (
     CanDeleteTask,
     CanEditTask,
     CanManageProjectMembers,
+    CanModifyComment,
     IsProjectOwnerOrManager,
 )
-from core.serializers import ProjectMemberSerializer, ProjectSerializer, TaskSerializer
+from core.serializers import (
+    ProjectMemberSerializer,
+    ProjectSerializer,
+    TaskChangeLogSerializer,
+    TaskCommentSerializer,
+    TaskSerializer,
+)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -67,3 +74,36 @@ class TaskViewSet(viewsets.ModelViewSet):
         if self.action in ('update', 'partial_update'):
             return [IsAuthenticated(), CanEditTask()]
         return [IsAuthenticated()]
+
+
+class TaskCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = TaskCommentSerializer
+    permission_classes = (IsAuthenticated,)
+    filterset_fields = ('task',)
+    ordering_fields = ('created_at', 'updated_at')
+    ordering = ('created_at',)
+
+    def get_queryset(self):
+        return (
+            TaskComment.objects.filter(task__project__in=access.accessible_projects(self.request.user))
+            .select_related('task', 'author', 'task__project')
+        )
+
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update', 'destroy'):
+            return [IsAuthenticated(), CanModifyComment()]
+        return [IsAuthenticated()]
+
+
+class TaskChangeLogViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = TaskChangeLogSerializer
+    permission_classes = (IsAuthenticated,)
+    filterset_fields = ('task', 'field_name')
+    ordering_fields = ('created_at',)
+    ordering = ('-created_at',)
+
+    def get_queryset(self):
+        return (
+            TaskChangeLog.objects.filter(task__project__in=access.accessible_projects(self.request.user))
+            .select_related('task', 'actor', 'task__project')
+        )
