@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import { RequireAuth } from './RequireAuth'
+import { AppLayout } from '../layouts/AppLayout'
+import { LoginPage } from '../pages/LoginPage'
+import { RegisterPage } from '../pages/RegisterPage'
 
 function Placeholder({ title }: { title: string }) {
   return <div style={{ padding: 24 }}>{title}</div>
@@ -8,15 +11,20 @@ function Placeholder({ title }: { title: string }) {
 
 export const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/app" replace /> },
-  { path: '/login', element: <Placeholder title="Login (todo)" /> },
-  { path: '/register', element: <Placeholder title="Register (todo)" /> },
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
   {
     path: '/app',
     element: <RequireAuth />,
     children: [
-      { index: true, element: <Placeholder title="Dashboard (todo)" /> },
-      { path: 'projects', element: <Placeholder title="Projects (todo)" /> },
-      { path: 'tasks', element: <Placeholder title="Tasks (todo)" /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <Placeholder title="Dashboard (todo)" /> },
+          { path: 'projects', element: <Placeholder title="Projects (todo)" /> },
+          { path: 'tasks', element: <Placeholder title="Tasks (todo)" /> },
+        ],
+      },
     ],
   },
   { path: '*', element: <Placeholder title="Not found" /> },
