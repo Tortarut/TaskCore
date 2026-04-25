@@ -82,6 +82,14 @@ input {
   font: inherit;
 }
 
+select {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  background: var(--surface);
+}
+
 .btn {
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -167,4 +175,90 @@ input {
 
 .app-main {
   padding: 16px;
+}
+
+.stack {
+  display: grid;
+  gap: 16px;
+}
+
+.page-head h2 {
+  margin: 0;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.tr {
+  display: grid;
+  grid-template-columns: 80px 1fr 220px 140px 240px;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tr.th {
+  background: #f9fafb;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.mono {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .tr {
+    grid-template-columns: 70px 1fr;
+  }
+  .tr > div:nth-child(3),
+  .tr > div:nth-child(4),
+  .tr > div:nth-child(5) {
+    grid-column: 2;
+  }
+  .actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }

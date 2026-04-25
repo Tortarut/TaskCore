@@ -4,6 +4,8 @@ import { RequireAuth } from './RequireAuth'
 import { AppLayout } from '../layouts/AppLayout'
 import { LoginPage } from '../pages/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage'
+import { ProjectsPage } from '../pages/ProjectsPage'
+import { TasksPage } from '../pages/TasksPage'
 
 function Placeholder({ title }: { title: string }) {
   return <div style={{ padding: 24 }}>{title}</div>
@@ -21,8 +23,8 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { index: true, element: <Placeholder title="Dashboard (todo)" /> },
-          { path: 'projects', element: <Placeholder title="Projects (todo)" /> },
-          { path: 'tasks', element: <Placeholder title="Tasks (todo)" /> },
+          { path: 'projects', element: <ProjectsPage /> },
+          { path: 'tasks', element: <TasksPage /> },
         ],
       },
     ],
