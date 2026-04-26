@@ -46,6 +46,25 @@ export type ProjectMember = {
   joined_at: string
 }
 
+export type TaskComment = {
+  id: number
+  task: number
+  author: User | null
+  body: string
+  created_at: string
+  updated_at: string
+}
+
+export type TaskChangeLog = {
+  id: number
+  task: number
+  actor: User | null
+  field_name: string
+  old_value: string
+  new_value: string
+  created_at: string
+}
+
 function qp(params: Record<string, string | number | boolean | null | undefined>) {
   const out = new URLSearchParams()
   for (const [k, v] of Object.entries(params)) {
@@ -139,5 +158,29 @@ export async function updateTask(
 
 export async function deleteTask(id: number) {
   await http.delete(`/tasks/${id}/`)
+}
+
+export async function listTaskComments(params: { task: number; page?: number }) {
+  const res = await http.get<Page<TaskComment>>(`/task-comments/${qp(params)}`)
+  return res.data
+}
+
+export async function addTaskComment(payload: { task: number; body: string }) {
+  const res = await http.post<TaskComment>('/task-comments/', payload)
+  return res.data
+}
+
+export async function updateTaskComment(id: number, payload: { body: string }) {
+  const res = await http.patch<TaskComment>(`/task-comments/${id}/`, payload)
+  return res.data
+}
+
+export async function deleteTaskComment(id: number) {
+  await http.delete(`/task-comments/${id}/`)
+}
+
+export async function listTaskChangeLogs(params: { task: number; page?: number; field_name?: string }) {
+  const res = await http.get<Page<TaskChangeLog>>(`/task-change-logs/${qp(params)}`)
+  return res.data
 }
 

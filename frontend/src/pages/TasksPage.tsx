@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
 import * as core from '../api/core'
+import { TaskDetailsPanel } from '../components/TaskDetailsPanel'
 
 type EditingTask = (core.Task & { assignee_id?: number | null }) | null
 
@@ -28,6 +29,7 @@ export function TasksPage() {
   const [isCreating, setIsCreating] = useState(false)
 
   const [editing, setEditing] = useState<EditingTask>(null)
+  const [detailsTaskId, setDetailsTaskId] = useState<number | null>(null)
 
   useEffect(() => {
     core
@@ -304,6 +306,9 @@ export function TasksPage() {
                   >
                     Edit
                   </button>
+                  <button className="btn" onClick={() => setDetailsTaskId(t.id)}>
+                    Details
+                  </button>
                   <button className="btn" onClick={() => void onDelete(t.id)}>
                     Delete
                   </button>
@@ -377,6 +382,18 @@ export function TasksPage() {
             </div>
           </form>
         </section>
+      ) : null}
+
+      {detailsTaskId ? (
+        <div className="stack">
+          <div className="table-head">
+            <h3>Детали задачи #{detailsTaskId}</h3>
+            <button className="btn" onClick={() => setDetailsTaskId(null)}>
+              Закрыть
+            </button>
+          </div>
+          <TaskDetailsPanel taskId={detailsTaskId} />
+        </div>
       ) : null}
     </div>
   )
