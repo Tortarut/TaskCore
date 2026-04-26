@@ -1,12 +1,14 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, permissions, status
+from rest_framework import filters, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from users.serializers import (
     RegisterSerializer,
     TaskCoreTokenObtainPairSerializer,
+    UserListSerializer,
     UserSerializer,
     UserUpdateSerializer,
 )
@@ -34,13 +36,16 @@ class UserMeView(generics.RetrieveUpdateAPIView):
 
 
 class LogoutView(APIView):
-    """
-    Stateless JWT: client discards tokens. Optional blacklist can be added later.
-    """
-
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request):
+        refresh = request.data.get('refresh')
+        if refresh:
+            try:
+                token = RefreshToken(refresh)
+                token.blacklist()
+            except Exception:
+                pass
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -50,3 +55,15 @@ class TaskCoreTokenObtainPairView(TokenObtainPairView):
 
 class TaskCoreTokenRefreshView(TokenRefreshView):
     pass
+
+
+class UserListView(generics.ListAPIView):
+    """
+    User search for UI selectors.
+    """
+
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = UserListSerializer
+    queryset = User.objects.all().order_by('email')
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('email', 'first_name', 'last_name')

@@ -1,4 +1,5 @@
 import { http } from './http'
+import { getTokens } from '../auth/tokens'
 
 export type LoginResponse = {
   access: string
@@ -37,6 +38,7 @@ export async function me() {
 }
 
 export async function logout() {
-  await http.post('/auth/logout/')
+  const refresh = getTokens()?.refresh
+  await http.post('/auth/logout/', refresh ? { refresh } : {})
 }
 

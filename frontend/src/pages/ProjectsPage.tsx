@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import * as core from '../api/core'
+import * as usersApi from '../api/users'
 import { parseDrfError } from '../ui/parseDrfError'
 
 type Editing = { id: number; name: string; description: string } | null
@@ -21,9 +22,12 @@ export function ProjectsPage() {
 
   const [membersProjectId, setMembersProjectId] = useState<number | null>(null)
   const [members, setMembers] = useState<core.Page<core.ProjectMember> | null>(null)
-  const [memberUserId, setMemberUserId] = useState('')
+  const [memberSearch, setMemberSearch] = useState('')
+  const [memberCandidates, setMemberCandidates] = useState<usersApi.UserListItem[]>([])
+  const [memberSelectedId, setMemberSelectedId] = useState<number | ''>('')
   const [memberRole, setMemberRole] = useState<'member' | 'manager'>('member')
   const [isMembersLoading, setIsMembersLoading] = useState(false)
+  const [isUserSearchLoading, setIsUserSearchLoading] = useState(false)
 
   async function load() {
     setIsLoading(true)
@@ -116,14 +120,27 @@ export function ProjectsPage() {
   async function onAddMember(e: FormEvent) {
     e.preventDefault()
     if (!membersProjectId) return
-    const userId = Number(memberUserId)
+    const userId = memberSelectedId === '' ? 0 : Number(memberSelectedId)
     if (!userId) return
     try {
       await core.addProjectMember({ project: membersProjectId, user_id: userId, role: memberRole })
-      setMemberUserId('')
+      setMemberSelectedId('')
       await loadMembers(membersProjectId)
     } catch (e) {
       setError(parseDrfError(e))
+    }
+  }
+
+  async function onSearchUsers(e: FormEvent) {
+    e.preventDefault()
+    setIsUserSearchLoading(true)
+    try {
+      const res = await usersApi.searchUsers(memberSearch.trim(), 1)
+      setMemberCandidates(res.results)
+    } catch (e) {
+      setError(parseDrfError(e))
+    } finally {
+      setIsUserSearchLoading(false)
     }
   }
 
@@ -275,11 +292,31 @@ export function ProjectsPage() {
 
           <div className="muted">{currentProject ? currentProject.name : ''}</div>
 
+          <form onSubmit={onSearchUsers} className="form" style={{ marginTop: 12 }}>
+            <label className="field">
+              <span>Поиск пользователя (email/имя/фамилия)</span>
+              <input value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} />
+            </label>
+            <button className="btn" disabled={isUserSearchLoading}>
+              {isUserSearchLoading ? 'Ищу…' : 'Найти'}
+            </button>
+          </form>
+
           <form onSubmit={onAddMember} className="form" style={{ marginTop: 12 }}>
             <div className="row">
               <label className="field">
-                <span>user_id</span>
-                <input value={memberUserId} onChange={(e) => setMemberUserId(e.target.value)} placeholder="например 2" />
+                <span>Пользователь</span>
+                <select
+                  value={memberSelectedId}
+                  onChange={(e) => setMemberSelectedId(e.target.value ? Number(e.target.value) : '')}
+                >
+                  <option value="">—</option>
+                  {memberCandidates.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.email} #{u.id}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="field">
                 <span>Роль</span>

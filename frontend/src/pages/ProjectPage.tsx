@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import * as core from '../api/core'
+import * as usersApi from '../api/users'
 import { useAuth } from '../auth/AuthContext'
 import { parseDrfError } from '../ui/parseDrfError'
 
@@ -16,7 +17,9 @@ export function ProjectPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [memberUserId, setMemberUserId] = useState('')
+  const [memberSearch, setMemberSearch] = useState('')
+  const [memberCandidates, setMemberCandidates] = useState<usersApi.UserListItem[]>([])
+  const [memberSelectedId, setMemberSelectedId] = useState<number | ''>('')
   const [memberRole, setMemberRole] = useState<'member' | 'manager'>('member')
 
   const [newTitle, setNewTitle] = useState('')
@@ -65,12 +68,22 @@ export function ProjectPage() {
 
   async function onAddMember(e: FormEvent) {
     e.preventDefault()
-    const uid = Number(memberUserId)
+    const uid = memberSelectedId === '' ? 0 : Number(memberSelectedId)
     if (!uid) return
     try {
       await core.addProjectMember({ project: projectId, user_id: uid, role: memberRole })
-      setMemberUserId('')
+      setMemberSelectedId('')
       await load()
+    } catch (e: any) {
+      setError(parseDrfError(e))
+    }
+  }
+
+  async function onSearchUsers(e: FormEvent) {
+    e.preventDefault()
+    try {
+      const res = await usersApi.searchUsers(memberSearch.trim(), 1)
+      setMemberCandidates(res.results)
     } catch (e: any) {
       setError(parseDrfError(e))
     }
@@ -159,17 +172,41 @@ export function ProjectPage() {
             {!members.length ? <div className="muted">Нет участников (кроме владельца).</div> : null}
           </div>
 
+          <form onSubmit={onSearchUsers} className="form" style={{ marginTop: 12 }}>
+            <label className="field">
+              <span>Поиск пользователя</span>
+              <input
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                placeholder="email/имя/фамилия"
+              />
+            </label>
+            <button className="btn" disabled={!canManage}>
+              Найти
+            </button>
+          </form>
+
           <form onSubmit={onAddMember} className="form" style={{ marginTop: 12 }}>
             <div className="row">
-              <label className="field">
-                <span>user_id</span>
-                <input value={memberUserId} onChange={(e) => setMemberUserId(e.target.value)} />
-              </label>
               <label className="field">
                 <span>роль</span>
                 <select value={memberRole} onChange={(e) => setMemberRole(e.target.value as any)}>
                   <option value="member">member</option>
                   <option value="manager">manager</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Пользователь</span>
+                <select
+                  value={memberSelectedId}
+                  onChange={(e) => setMemberSelectedId(e.target.value ? Number(e.target.value) : '')}
+                >
+                  <option value="">—</option>
+                  {memberCandidates.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.email} #{u.id}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
