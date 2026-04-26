@@ -1,12 +1,16 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import * as core from '../api/core'
 import { TaskDetailsPanel } from '../components/TaskDetailsPanel'
+import { parseDrfError } from '../ui/parseDrfError'
 
 type EditingTask = (core.Task & { assignee_id?: number | null }) | null
 
 export function TasksPage() {
+  const navigate = useNavigate()
   const [projects, setProjects] = useState<core.Project[]>([])
+  const [projectMembersById, setProjectMembersById] = useState<Map<number, core.ProjectMember[]>>(new Map())
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -15,6 +19,8 @@ export function TasksPage() {
   const [priority, setPriority] = useState<string>('')
   const [ordering, setOrdering] = useState<string>('-created_at')
   const [assignee, setAssignee] = useState<string>('') // numeric id string
+  const [dueAfter, setDueAfter] = useState<string>('')
+  const [dueBefore, setDueBefore] = useState<string>('')
 
   const [data, setData] = useState<core.Page<core.Task> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -25,7 +31,7 @@ export function TasksPage() {
   const [newDesc, setNewDesc] = useState('')
   const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [newDue, setNewDue] = useState<string>('')
-  const [newAssigneeId, setNewAssigneeId] = useState<string>('')
+  const [newAssigneeId, setNewAssigneeId] = useState<number | ''>('')
   const [isCreating, setIsCreating] = useState(false)
 
   const [editing, setEditing] = useState<EditingTask>(null)
@@ -34,7 +40,21 @@ export function TasksPage() {
   useEffect(() => {
     core
       .listProjects({ page: 1 })
-      .then((p) => setProjects(p.results))
+      .then(async (p) => {
+        setProjects(p.results)
+        const map = new Map<number, core.ProjectMember[]>()
+        await Promise.all(
+          p.results.map(async (proj) => {
+            try {
+              const ms = await core.listProjectMembers({ project: proj.id, page: 1 })
+              map.set(proj.id, ms.results)
+            } catch {
+              map.set(proj.id, [])
+            }
+          }),
+        )
+        setProjectMembersById(map)
+      })
       .catch(() => setProjects([]))
   }, [])
 
@@ -49,11 +69,13 @@ export function TasksPage() {
         status: status || undefined,
         priority: priority || undefined,
         assignee: assignee ? Number(assignee) : undefined,
+        due_date_after: dueAfter || undefined,
+        due_date_before: dueBefore || undefined,
         ordering: ordering || undefined,
       })
       setData(res)
     } catch (e) {
-      setError('Не удалось загрузить задачи.')
+      setError(parseDrfError(e))
     } finally {
       setIsLoading(false)
     }
@@ -82,7 +104,7 @@ export function TasksPage() {
         description: newDesc,
         priority: newPriority,
         due_date: newDue ? newDue : null,
-        assignee_id: newAssigneeId ? Number(newAssigneeId) : null,
+        assignee_id: newAssigneeId === '' ? null : Number(newAssigneeId),
       })
       setNewTitle('')
       setNewDesc('')
@@ -91,9 +113,7 @@ export function TasksPage() {
       setPage(1)
       await load()
     } catch (e: any) {
-      const d = e?.response?.data
-      const msg = d?.detail ?? d?.status ?? d?.assignee_id ?? 'Не удалось создать задачу.'
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg))
+      setError(parseDrfError(e))
     } finally {
       setIsCreating(false)
     }
@@ -115,9 +135,7 @@ export function TasksPage() {
       setEditing(null)
       await load()
     } catch (e: any) {
-      const d = e?.response?.data
-      const msg = d?.status ?? d?.assignee_id ?? d?.detail ?? 'Не удалось сохранить задачу.'
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg))
+      setError(parseDrfError(e))
     }
   }
 
@@ -128,7 +146,7 @@ export function TasksPage() {
       await core.deleteTask(id)
       await load()
     } catch (e) {
-      setError('Не удалось удалить задачу (возможно, нет прав).')
+      setError(parseDrfError(e))
     }
   }
 
@@ -137,6 +155,18 @@ export function TasksPage() {
   const canNext = Boolean(data?.next)
 
   const projectMap = useMemo(() => new Map(projects.map((p) => [p.id, p.name])), [projects])
+
+  const newAssigneeOptions = useMemo(() => {
+    if (newProject === '') return []
+    const p = projects.find((x) => x.id === Number(newProject))
+    const members = projectMembersById.get(Number(newProject)) ?? []
+    const users: core.User[] = []
+    if (p?.owner) users.push(p.owner)
+    for (const m of members) users.push(m.user)
+    const uniq = new Map<number, core.User>()
+    for (const u of users) uniq.set(u.id, u)
+    return Array.from(uniq.values()).sort((a, b) => a.email.localeCompare(b.email))
+  }, [newProject, projectMembersById, projects])
 
   return (
     <div className="stack">
@@ -182,8 +212,18 @@ export function TasksPage() {
               </label>
             </div>
             <label className="field">
-              <span>assignee_id (опционально)</span>
-              <input value={newAssigneeId} onChange={(e) => setNewAssigneeId(e.target.value)} placeholder="например 3" />
+              <span>Исполнитель (опционально)</span>
+              <select
+                value={newAssigneeId}
+                onChange={(e) => setNewAssigneeId(e.target.value ? Number(e.target.value) : '')}
+              >
+                <option value="">—</option>
+                {newAssigneeOptions.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.email} #{u.id}
+                  </option>
+                ))}
+              </select>
             </label>
             <button className="btn primary" disabled={isCreating}>
               {isCreating ? 'Создаю…' : 'Создать'}
@@ -248,6 +288,16 @@ export function TasksPage() {
               <span>assignee (id)</span>
               <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="например 3" />
             </label>
+            <div className="row">
+              <label className="field">
+                <span>due_date_after</span>
+                <input type="date" value={dueAfter} onChange={(e) => setDueAfter(e.target.value)} />
+              </label>
+              <label className="field">
+                <span>due_date_before</span>
+                <input type="date" value={dueBefore} onChange={(e) => setDueBefore(e.target.value)} />
+              </label>
+            </div>
             <button className="btn" disabled={isLoading}>
               Применить
             </button>
@@ -308,6 +358,9 @@ export function TasksPage() {
                   </button>
                   <button className="btn" onClick={() => setDetailsTaskId(t.id)}>
                     Details
+                  </button>
+                  <button className="btn" onClick={() => navigate(`/app/tasks/${t.id}`)}>
+                    Open
                   </button>
                   <button className="btn" onClick={() => void onDelete(t.id)}>
                     Delete

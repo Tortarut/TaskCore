@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react'
 
 import * as core from '../api/core'
+import { parseDrfError } from '../ui/parseDrfError'
 
 export function TaskDetailsPanel({
   taskId,
@@ -49,7 +50,7 @@ export function TaskDetailsPanel({
       setNewBody('')
       await load()
     } catch (e) {
-      alert('Не удалось добавить комментарий.')
+      setError(parseDrfError(e))
     } finally {
       setIsSending(false)
     }
@@ -69,7 +70,7 @@ export function TaskDetailsPanel({
       setEditingBody('')
       await load()
     } catch (e) {
-      alert('Не удалось сохранить комментарий (возможно, нет прав).')
+      setError(parseDrfError(e))
     }
   }
 
@@ -79,7 +80,7 @@ export function TaskDetailsPanel({
       await core.deleteTaskComment(id)
       await load()
     } catch (e) {
-      alert('Не удалось удалить комментарий (возможно, нет прав).')
+      setError(parseDrfError(e))
     }
   }
 

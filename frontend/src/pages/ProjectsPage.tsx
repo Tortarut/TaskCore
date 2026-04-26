@@ -1,6 +1,8 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import * as core from '../api/core'
+import { parseDrfError } from '../ui/parseDrfError'
 
 type Editing = { id: number; name: string; description: string } | null
 
@@ -30,7 +32,7 @@ export function ProjectsPage() {
       const res = await core.listProjects({ page, search: search.trim() || undefined })
       setData(res)
     } catch (e) {
-      setError('Не удалось загрузить проекты.')
+      setError(parseDrfError(e))
     } finally {
       setIsLoading(false)
     }
@@ -59,8 +61,7 @@ export function ProjectsPage() {
       setPage(1)
       await load()
     } catch (e: any) {
-      const msg = e?.response?.data
-      setError(msg?.detail ?? 'Не удалось создать проект.')
+      setError(parseDrfError(e))
     } finally {
       setIsCreating(false)
     }
@@ -75,7 +76,7 @@ export function ProjectsPage() {
       setEditing(null)
       await load()
     } catch (e) {
-      setError('Не удалось сохранить проект.')
+      setError(parseDrfError(e))
     }
   }
 
@@ -86,7 +87,7 @@ export function ProjectsPage() {
       await core.deleteProject(id)
       await load()
     } catch (e) {
-      setError('Не удалось удалить проект (возможно, нет прав).')
+      setError(parseDrfError(e))
     }
   }
 
@@ -122,7 +123,7 @@ export function ProjectsPage() {
       setMemberUserId('')
       await loadMembers(membersProjectId)
     } catch (e) {
-      alert('Не удалось добавить участника (проверь user_id и права).')
+      setError(parseDrfError(e))
     }
   }
 
@@ -131,7 +132,7 @@ export function ProjectsPage() {
       await core.updateProjectMember(member.id, { role })
       if (membersProjectId) await loadMembers(membersProjectId)
     } catch (e) {
-      alert('Не удалось изменить роль участника.')
+      setError(parseDrfError(e))
     }
   }
 
@@ -141,7 +142,7 @@ export function ProjectsPage() {
       await core.deleteProjectMember(member.id)
       if (membersProjectId) await loadMembers(membersProjectId)
     } catch (e) {
-      alert('Не удалось удалить участника.')
+      setError(parseDrfError(e))
     }
   }
 
@@ -221,6 +222,9 @@ export function ProjectsPage() {
                   <button className="btn" onClick={() => setEditing({ id: p.id, name: p.name, description: p.description })}>
                     Edit
                   </button>
+                  <Link className="btn" to={`/app/projects/${p.id}`}>
+                    Open
+                  </Link>
                   <button className="btn" onClick={() => void loadMembers(p.id)}>
                     Members
                   </button>

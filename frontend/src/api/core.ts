@@ -80,6 +80,11 @@ export async function listProjects(params: { page?: number; search?: string } = 
   return res.data
 }
 
+export async function getProject(id: number) {
+  const res = await http.get<Project>(`/projects/${id}/`)
+  return res.data
+}
+
 export async function createProject(payload: { name: string; description?: string }) {
   const res = await http.post<Project>('/projects/', payload)
   return res.data
@@ -126,6 +131,11 @@ export async function listTasks(params: {
   ordering?: string
 } = {}) {
   const res = await http.get<Page<Task>>(`/tasks/${qp(params)}`)
+  return res.data
+}
+
+export async function getTask(id: number) {
+  const res = await http.get<Task>(`/tasks/${id}/`)
   return res.data
 }
 
