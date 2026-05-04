@@ -11,15 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 def _env_bool(name: str, default: bool) -> bool:
     v = os.environ.get(name)
@@ -28,16 +25,12 @@ def _env_bool(name: str, default: bool) -> bool:
     return v.strip().lower() in ('1', 'true', 'yes', 'y', 'on')
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = _env_bool('DJANGO_DEBUG', True)
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -86,19 +79,41 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+def _database_from_postgres_env():
+    host = (os.environ.get('POSTGRES_HOST') or '').strip()
+    if not host:
+        return None
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': (os.environ.get('POSTGRES_DB') or 'postgres').strip() or 'postgres',
+        'USER': (os.environ.get('POSTGRES_USER') or 'postgres').strip() or 'postgres',
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+        'HOST': host,
+        'PORT': (os.environ.get('POSTGRES_PORT') or '5432').strip() or '5432',
+        'CONN_MAX_AGE': 60,
     }
-}
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+_pg_default = _database_from_postgres_env()
+if _pg_default is not None:
+    DATABASES = {'default': _pg_default}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+_engine = DATABASES['default']['ENGINE']
+if _engine == 'django.db.backends.postgresql':
+    _db_choice = 'PostgreSQL'
+elif _engine == 'django.db.backends.sqlite3':
+    _db_choice = 'SQLite'
+else:
+    _db_choice = _engine
+print(f'TaskCore: database at startup - {_db_choice}', file=sys.stderr, flush=True)
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -116,9 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -128,13 +140,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

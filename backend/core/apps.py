@@ -6,4 +6,6 @@ class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
-        from core import signals  # noqa: F401
+        import importlib
+
+        importlib.import_module('core.signals')

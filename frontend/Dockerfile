@@ -2,11 +2,10 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json* /app/
-RUN npm ci || npm install
+RUN npm install
 
 COPY . /app
 
-# Use nginx reverse-proxy path by default
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
