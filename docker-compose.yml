@@ -5,8 +5,6 @@ services:
       POSTGRES_DB: vaultix
       POSTGRES_USER: vaultix
       POSTGRES_PASSWORD: vaultix
-    ports:
-      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,9 +17,9 @@ services:
     build:
       context: ./backend
     environment:
-      DJANGO_DEBUG: "1"
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
-      DJANGO_SECRET_KEY: "django-insecure-dev"
+      DJANGO_DEBUG: "${DJANGO_DEBUG:-0}"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-change-me}"
       POSTGRES_DB: vaultix
       POSTGRES_USER: vaultix
       POSTGRES_PASSWORD: vaultix
@@ -32,6 +30,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  backend-migrate:
+    build:
+      context: ./backend
+    environment:
+      DJANGO_DEBUG: "${DJANGO_DEBUG:-0}"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-change-me}"
+      POSTGRES_DB: vaultix
+      POSTGRES_USER: vaultix
+      POSTGRES_PASSWORD: vaultix
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "python scripts/wait_for_db.py && python manage.py migrate --noinput"]
 
   frontend:
     build:

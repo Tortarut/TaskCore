@@ -1,0 +1,18 @@
+services:
+  db:
+    ports:
+      - "5433:5432"
+
+  backend:
+    environment:
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      DJANGO_SECRET_KEY: "django-insecure-dev"
+    ports:
+      - "8001:8000"
+
+  backend-migrate:
+    environment:
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      DJANGO_SECRET_KEY: "django-insecure-dev"
