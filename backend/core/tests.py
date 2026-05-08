@@ -250,3 +250,37 @@ class AccessibleProjectsUnitTests(TestCase):
         qs = access.accessible_projects(owner)
         self.assertTrue(qs.filter(pk=p.pk).exists())
         self.assertFalse(access.accessible_projects(other).filter(pk=p.pk).exists())
+
+
+try:
+    import pytest
+    from schemathesis import openapi
+except Exception:
+    pytest = None
+    openapi = None
+
+
+if pytest is not None and openapi is not None:
+    from django.core.wsgi import get_wsgi_application
+
+    _wsgi_app = get_wsgi_application()
+    _schema = openapi.from_wsgi('/api/schema/', app=_wsgi_app).exclude(path_regex=r'^/api/(schema|docs|auth)/')
+
+    _AUTH_HEADERS_CACHE = None
+
+    def _get_auth_headers():
+        global _AUTH_HEADERS_CACHE
+        if _AUTH_HEADERS_CACHE is not None:
+            return _AUTH_HEADERS_CACHE
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        user = User.objects.create_user(unique_email('fuzz'), PASSWORD)
+        token = RefreshToken.for_user(user)
+        _AUTH_HEADERS_CACHE = {'Authorization': f'Bearer {str(token.access_token)}'}
+        return _AUTH_HEADERS_CACHE
+
+    @_schema.parametrize()
+    @pytest.mark.django_db
+    def test_openapi_fuzz_no_5xx(case):
+        response = case.call(headers=_get_auth_headers())
+        assert response.status_code < 500
