@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 import sys
+import logging
 from datetime import timedelta
 from pathlib import Path
 
@@ -113,7 +114,29 @@ elif _engine == 'django.db.backends.sqlite3':
     _db_choice = 'SQLite'
 else:
     _db_choice = _engine
-print(f'TaskCore: database at startup - {_db_choice}', file=sys.stderr, flush=True)
+
+LOG_LEVEL = (os.environ.get('DJANGO_LOG_LEVEL') or ('DEBUG' if DEBUG else 'INFO')).upper()
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'plain': {'format': '%(asctime)s %(levelname)s %(name)s %(message)s'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'formatter': 'plain',
+        },
+    },
+    'root': {'handlers': ['console'], 'level': LOG_LEVEL},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False},
+    },
+}
+
+logging.getLogger('taskcore.startup').info('database at startup - %s', _db_choice)
 
 
 AUTH_PASSWORD_VALIDATORS = [
