@@ -54,3 +54,5 @@ manage.py
 drf_example
 
 .env
+
+fuzz-report.html
