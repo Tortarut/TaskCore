@@ -2,6 +2,8 @@
 
 TaskCore — клиент‑серверное приложение для управления проектами и задачами.
 
+- Развёрнутый проект: `http://taskcore123.duckdns.org/`
+
 - **Серверная часть**: Django + Django REST Framework (JWT)
 - **Клиентская часть**: React (Vite) + Nginx (маршрутизация запросов `/api/` → backend)
 - **База данных**: PostgreSQL (Docker Compose)
