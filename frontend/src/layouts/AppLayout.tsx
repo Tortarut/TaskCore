@@ -19,16 +19,16 @@ export function AppLayout() {
         </Link>
         <nav className="nav">
           <NavLink to="/app/projects" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Projects
+            Проекты
           </NavLink>
           <NavLink to="/app/tasks" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Tasks
+            Задачи
           </NavLink>
         </nav>
         <div className="userbox">
           <span className="user-meta">{user?.email}</span>
           <button type="button" className="btn" onClick={onLogout}>
-            Logout
+            Выйти
           </button>
         </div>
       </header>

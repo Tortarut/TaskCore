@@ -1,7 +1,22 @@
 import { type FormEvent, useEffect, useState } from 'react'
 
 import * as core from '../api/core'
+import { formatChangeLogValue, taskChangeFieldLabel } from '../ui/labels'
 import { parseDrfError } from '../ui/parseDrfError'
+
+function formatWhen(iso: string) {
+  try {
+    return new Date(iso).toLocaleString('ru-RU', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return iso
+  }
+}
 
 export function TaskDetailsPanel({
   taskId,
@@ -85,10 +100,10 @@ export function TaskDetailsPanel({
   }
 
   return (
-    <section className="card">
+    <section className="card panel">
       <div className="table-head">
         <h3>Комментарии и история</h3>
-        <button className="btn" onClick={() => void load()} disabled={isLoading}>
+        <button type="button" className="btn" onClick={() => void load()} disabled={isLoading}>
           Обновить
         </button>
       </div>
@@ -96,87 +111,109 @@ export function TaskDetailsPanel({
       {error ? <div className="error">{error}</div> : null}
       {isLoading ? <div className="muted">Загрузка…</div> : null}
 
-      <div className="details-grid">
-        <div>
+      <div className="task-details-columns">
+        <div className="task-details-column">
           <h4>Комментарии</h4>
-          <form onSubmit={onAdd} className="form">
-            <label className="field">
-              <span>Текст</span>
-              <input value={newBody} onChange={(e) => setNewBody(e.target.value)} />
-            </label>
-            <button className="btn" disabled={isSending}>
-              {isSending ? 'Отправляю…' : 'Добавить'}
-            </button>
-          </form>
 
-          <div className="list">
+          <div className="comment-compose">
+            <form onSubmit={onAdd} className="form" style={{ marginTop: 0 }}>
+              <label className="field">
+                <span>Новый комментарий</span>
+                <textarea
+                  value={newBody}
+                  onChange={(e) => setNewBody(e.target.value)}
+                  placeholder="Напишите текст…"
+                  rows={4}
+                />
+              </label>
+              <button type="submit" className="btn primary" disabled={isSending}>
+                {isSending ? 'Отправляю…' : 'Отправить'}
+              </button>
+            </form>
+          </div>
+
+          <div className="thread-list">
             {comments.map((c) => (
-              <div key={c.id} className="item">
-                <div className="item-head">
-                  <div className="muted">
-                    {c.author?.email ?? '—'} • {new Date(c.created_at).toLocaleString()}
+              <article key={c.id} className="thread-card">
+                <div className="thread-card__top">
+                  <span className="thread-card__id">#{c.id}</span>
+                  <div className="thread-card__meta">
+                    <strong>{c.author?.email ?? 'Неизвестный автор'}</strong>
+                    <time dateTime={c.created_at}>{formatWhen(c.created_at)}</time>
                   </div>
-                  <div className="actions">
-                    <button className="btn" onClick={() => beginEdit(c)}>
-                      Edit
+                  <div className="thread-card__actions">
+                    <button type="button" className="btn" onClick={() => beginEdit(c)}>
+                      Редактировать
                     </button>
-                    <button className="btn" onClick={() => void removeComment(c.id)}>
-                      Delete
+                    <button type="button" className="btn" onClick={() => void removeComment(c.id)}>
+                      Удалить
                     </button>
                   </div>
                 </div>
 
                 {editingId === c.id ? (
-                  <form onSubmit={saveEdit} className="form">
-                    <label className="field">
-                      <span>Текст</span>
-                      <input value={editingBody} onChange={(e) => setEditingBody(e.target.value)} />
-                    </label>
-                    <div className="actions">
-                      <button className="btn primary">Сохранить</button>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => {
-                          setEditingId(null)
-                          setEditingBody('')
-                        }}
-                      >
-                        Отмена
-                      </button>
-                    </div>
-                  </form>
+                  <div className="thread-card__edit">
+                    <form onSubmit={saveEdit} className="form" style={{ marginTop: 0 }}>
+                      <label className="field">
+                        <span>Текст комментария</span>
+                        <textarea value={editingBody} onChange={(e) => setEditingBody(e.target.value)} rows={5} />
+                      </label>
+                      <div className="actions" style={{ justifyContent: 'flex-start' }}>
+                        <button type="submit" className="btn primary">
+                          Сохранить
+                        </button>
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => {
+                            setEditingId(null)
+                            setEditingBody('')
+                          }}
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 ) : (
-                  <div>{c.body}</div>
+                  <div className="thread-card__body">{c.body}</div>
                 )}
-              </div>
+              </article>
             ))}
-            {!comments.length ? <div className="muted">Комментариев нет.</div> : null}
+            {!comments.length ? <div className="muted">Пока нет комментариев — будьте первым.</div> : null}
           </div>
         </div>
 
-        <div>
+        <div className="task-details-column">
           <h4>История изменений</h4>
-          <div className="list">
+
+          <div className="history-list">
             {logs.map((l) => (
-              <div key={l.id} className="item">
-                <div className="muted">
-                  {new Date(l.created_at).toLocaleString()} • {l.actor?.email ?? '—'}
+              <article key={l.id} className="history-card">
+                <div className="history-card__head">
+                  <span className="history-card__time">{formatWhen(l.created_at)}</span>
+                  <span className="field-pill">{taskChangeFieldLabel(l.field_name)}</span>
                 </div>
-                <div className="mono">{l.field_name}</div>
-                <div>
-                  <span className="muted">было:</span> {l.old_value || '—'}
+                <div className="history-card__actor">
+                  <span>Кто изменил: </span>
+                  {l.actor?.email ?? '—'}
                 </div>
-                <div>
-                  <span className="muted">стало:</span> {l.new_value || '—'}
+                <div className="history-diff">
+                  <div className="history-diff__box history-diff__box--old">
+                    <div className="history-diff__label">Было</div>
+                    <div className="history-diff__value">{formatChangeLogValue(l.field_name, l.old_value)}</div>
+                  </div>
+                  <div className="history-diff__box history-diff__box--new">
+                    <div className="history-diff__label">Стало</div>
+                    <div className="history-diff__value">{formatChangeLogValue(l.field_name, l.new_value)}</div>
+                  </div>
                 </div>
-              </div>
+              </article>
             ))}
-            {!logs.length ? <div className="muted">История пустая.</div> : null}
+            {!logs.length ? <div className="muted">Записей пока нет — изменения по задаче появятся здесь.</div> : null}
           </div>
         </div>
       </div>
     </section>
   )
 }
-

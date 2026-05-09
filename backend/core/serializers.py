@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from core import access, workflow
 from core.models import Project, ProjectMember, Task, TaskChangeLog, TaskComment
+from core.threadlocals import audit_actor
 from users.serializers import UserSerializer
 
 User = get_user_model()
@@ -144,7 +145,8 @@ class TaskSerializer(serializers.ModelSerializer):
                     {'assignee_id': 'Assignee must be the project owner or a project member.'},
                 )
         validated_data['author'] = request.user
-        return super().create(validated_data)
+        with audit_actor(request.user):
+            return super().create(validated_data)
 
     def update(self, instance, validated_data):
         request = self.context['request']
@@ -170,7 +172,8 @@ class TaskSerializer(serializers.ModelSerializer):
         )
         if not ok:
             raise serializers.ValidationError({'status': err})
-        return super().update(instance, validated_data)
+        with audit_actor(request.user):
+            return super().update(instance, validated_data)
 
 
 class TaskCommentSerializer(serializers.ModelSerializer):

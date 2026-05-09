@@ -116,7 +116,7 @@ export function TaskPage() {
             </h3>
             <div className="actions">
               <button className="btn" onClick={() => void onDelete()} disabled={!canManage}>
-                Delete
+                Удалить
               </button>
             </div>
           </div>
@@ -134,25 +134,25 @@ export function TaskPage() {
               <label className="field">
                 <span>Статус</span>
                 <select value={task.status} onChange={(e) => setTask({ ...task, status: e.target.value as any })}>
-                  <option value="todo">todo</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="review">review</option>
-                  <option value="done">done</option>
-                  <option value="cancelled">cancelled</option>
+                  <option value="todo">К выполнению</option>
+                  <option value="in_progress">В работе</option>
+                  <option value="review">На проверке</option>
+                  <option value="done">Готово</option>
+                  <option value="cancelled">Отменена</option>
                 </select>
               </label>
               <label className="field">
                 <span>Приоритет</span>
                 <select value={task.priority} onChange={(e) => setTask({ ...task, priority: e.target.value as any })}>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
+                  <option value="low">Низкий</option>
+                  <option value="medium">Средний</option>
+                  <option value="high">Высокий</option>
                 </select>
               </label>
             </div>
             <div className="row">
               <label className="field">
-                <span>due_date</span>
+                <span>Срок</span>
                 <input
                   type="date"
                   value={task.due_date ?? ''}
@@ -175,7 +175,7 @@ export function TaskPage() {
               <button className="btn primary">Сохранить</button>
             </div>
             <div className="muted" style={{ marginTop: 8 }}>
-              author: {task.author?.email ?? '—'} • assignee: {task.assignee?.email ?? '—'}
+              Создано: {task.author?.email ?? '—'} • Исполнитель: {task.assignee?.email ?? '—'}
             </div>
           </form>
         </section>

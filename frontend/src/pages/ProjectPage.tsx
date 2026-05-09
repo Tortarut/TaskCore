@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import * as core from '../api/core'
 import * as usersApi from '../api/users'
 import { useAuth } from '../auth/AuthContext'
+import { projectRoleLabel, taskPriorityLabel, taskStatusLabel } from '../ui/labels'
 import { parseDrfError } from '../ui/parseDrfError'
 
 export function ProjectPage() {
@@ -138,7 +139,7 @@ export function ProjectPage() {
           <h3>
             {project.name} <span className="mono">#{project.id}</span>
           </h3>
-          <div className="muted">owner: {project.owner?.email}</div>
+          <div className="muted">Создано: {project.owner?.email}</div>
           <div style={{ marginTop: 8 }}>{project.description}</div>
         </section>
       ) : null}
@@ -150,21 +151,19 @@ export function ProjectPage() {
             <div className="muted">{canManage ? 'можно управлять' : 'только просмотр'}</div>
           </div>
 
-          <div className="table" style={{ marginTop: 12 }}>
-            <div className="tr th" style={{ gridTemplateColumns: '1fr 140px 220px' }}>
-              <div>Пользователь</div>
-              <div>Роль</div>
-              <div></div>
-            </div>
+          <div className="list-rows" style={{ marginTop: 12 }}>
             {members.map((m) => (
-              <div key={m.id} className="tr" style={{ gridTemplateColumns: '1fr 140px 220px' }}>
-                <div className="muted">
-                  {m.user.email} <span className="mono">#{m.user.id}</span>
+              <div key={m.id} className="list-row">
+                <div className="list-row__main">
+                  <div className="list-row__title">{m.user.email}</div>
+                  <div className="list-row__meta">
+                    <span>Пользователь #{m.user.id}</span>
+                    <span>Роль: {projectRoleLabel(m.role)}</span>
+                  </div>
                 </div>
-                <div className="mono">{m.role}</div>
-                <div className="actions">
+                <div className="list-row__actions">
                   <button className="btn" disabled={!canManage} onClick={() => void onRemoveMember(m.id)}>
-                    Remove
+                    Удалить
                   </button>
                 </div>
               </div>
@@ -191,8 +190,8 @@ export function ProjectPage() {
               <label className="field">
                 <span>роль</span>
                 <select value={memberRole} onChange={(e) => setMemberRole(e.target.value as any)}>
-                  <option value="member">member</option>
-                  <option value="manager">manager</option>
+                  <option value="member">Участник</option>
+                  <option value="manager">Менеджер</option>
                 </select>
               </label>
               <label className="field">
@@ -231,13 +230,13 @@ export function ProjectPage() {
               <label className="field">
                 <span>Приоритет</span>
                 <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as any)}>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
+                  <option value="low">Низкий</option>
+                  <option value="medium">Средний</option>
+                  <option value="high">Высокий</option>
                 </select>
               </label>
               <label className="field">
-                <span>due_date</span>
+                <span>Срок</span>
                 <input type="date" value={newDue} onChange={(e) => setNewDue(e.target.value)} />
               </label>
             </div>
@@ -260,28 +259,26 @@ export function ProjectPage() {
         </section>
       </div>
 
-      <section className="card">
+      <section className="card panel">
         <div className="table-head">
           <h3>Задачи проекта</h3>
         </div>
-        <div className="table">
-          <div className="tr th" style={{ gridTemplateColumns: '80px 1fr 140px 140px' }}>
-            <div>ID</div>
-            <div>Название</div>
-            <div>Статус</div>
-            <div></div>
-          </div>
+        <div className="list-rows">
           {tasks.map((t) => (
-            <div key={t.id} className="tr" style={{ gridTemplateColumns: '80px 1fr 140px 140px' }}>
-              <div className="mono">{t.id}</div>
-              <div>
-                <div className="strong">{t.title}</div>
-                <div className="muted">assignee: {t.assignee?.email ?? '—'}</div>
+            <div key={t.id} className="list-row">
+              <div className="list-row__id">#{t.id}</div>
+              <div className="list-row__main">
+                <div className="list-row__title">{t.title}</div>
+                <div className="list-row__meta">
+                  <span className="task-status-pill">{taskStatusLabel(t.status)}</span>
+                  <span>Приоритет: {taskPriorityLabel(t.priority)}</span>
+                  <span>Исполнитель: {t.assignee?.email ?? '—'}</span>
+                  <span>Создано: {t.author?.email ?? '—'}</span>
+                </div>
               </div>
-              <div className="mono">{t.status}</div>
-              <div className="actions">
+              <div className="list-row__actions">
                 <Link className="btn" to={`/app/tasks/${t.id}`}>
-                  Open
+                  Открыть
                 </Link>
               </div>
             </div>

@@ -203,7 +203,7 @@ export function ProjectsPage() {
 
       {error ? <div className="error">{error}</div> : null}
 
-      <section className="card">
+      <section className="card panel">
         <div className="table-head">
           <h3>Список</h3>
           <div className="pager">
@@ -220,33 +220,29 @@ export function ProjectsPage() {
         {isLoading ? (
           <div className="muted">Загрузка…</div>
         ) : (
-          <div className="table">
-            <div className="tr th">
-              <div>ID</div>
-              <div>Название</div>
-              <div>Владелец</div>
-              <div></div>
-            </div>
+          <div className="list-rows">
             {projects.map((p) => (
-              <div key={p.id} className="tr">
-                <div className="mono">{p.id}</div>
-                <div>
-                  <div className="strong">{p.name}</div>
-                  <div className="muted">{p.description}</div>
+              <div key={p.id} className="list-row">
+                <div className="list-row__id">#{p.id}</div>
+                <div className="list-row__main">
+                  <div className="list-row__title">{p.name}</div>
+                  {p.description ? <div className="list-row__desc">{p.description}</div> : null}
+                  <div className="list-row__meta">
+                    <span>Создано: {p.owner?.email ?? '—'}</span>
+                  </div>
                 </div>
-                <div className="muted">{p.owner?.email}</div>
-                <div className="actions">
+                <div className="list-row__actions">
                   <button className="btn" onClick={() => setEditing({ id: p.id, name: p.name, description: p.description })}>
-                    Edit
+                    Редактировать
                   </button>
                   <Link className="btn" to={`/app/projects/${p.id}`}>
-                    Open
+                    Открыть
                   </Link>
                   <button className="btn" onClick={() => void loadMembers(p.id)}>
-                    Members
+                    Участники
                   </button>
                   <button className="btn" onClick={() => void onDelete(p.id)}>
-                    Delete
+                    Удалить
                   </button>
                 </div>
               </div>
@@ -282,7 +278,7 @@ export function ProjectsPage() {
       ) : null}
 
       {membersProjectId ? (
-        <section className="card">
+        <section className="card panel">
           <div className="table-head">
             <h3>Участники проекта #{membersProjectId}</h3>
             <button className="btn" onClick={() => setMembersProjectId(null)}>
@@ -321,8 +317,8 @@ export function ProjectsPage() {
               <label className="field">
                 <span>Роль</span>
                 <select value={memberRole} onChange={(e) => setMemberRole(e.target.value as any)}>
-                  <option value="member">member</option>
-                  <option value="manager">manager</option>
+                  <option value="member">Участник</option>
+                  <option value="manager">Менеджер</option>
                 </select>
               </label>
             </div>
@@ -334,28 +330,26 @@ export function ProjectsPage() {
           {isMembersLoading ? (
             <div className="muted">Загрузка участников…</div>
           ) : (
-            <div className="table" style={{ marginTop: 12 }}>
-              <div className="tr th">
-                <div>ID</div>
-                <div>Пользователь</div>
-                <div>Роль</div>
-                <div></div>
-              </div>
+            <div className="list-rows">
               {(members?.results ?? []).map((m) => (
-                <div key={m.id} className="tr">
-                  <div className="mono">{m.id}</div>
-                  <div className="muted">
-                    {m.user?.email} <span className="mono">#{m.user?.id}</span>
+                <div key={m.id} className="list-row">
+                  <div className="list-row__id">#{m.id}</div>
+                  <div className="list-row__main">
+                    <div className="list-row__title">{m.user?.email ?? '—'}</div>
+                    <div className="list-row__meta">
+                      <span>Пользователь #{m.user?.id}</span>
+                      <span>
+                        Роль:{' '}
+                        <select value={m.role} onChange={(e) => void onChangeMemberRole(m, e.target.value as any)}>
+                          <option value="member">Участник</option>
+                          <option value="manager">Менеджер</option>
+                        </select>
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <select value={m.role} onChange={(e) => void onChangeMemberRole(m, e.target.value as any)}>
-                      <option value="member">member</option>
-                      <option value="manager">manager</option>
-                    </select>
-                  </div>
-                  <div className="actions">
+                  <div className="list-row__actions">
                     <button className="btn" onClick={() => void onDeleteMember(m)}>
-                      Remove
+                      Удалить
                     </button>
                   </div>
                 </div>

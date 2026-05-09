@@ -8,6 +8,7 @@ import { ProjectsPage } from '../pages/ProjectsPage'
 import { TasksPage } from '../pages/TasksPage'
 import { ProjectPage } from '../pages/ProjectPage'
 import { TaskPage } from '../pages/TaskPage'
+import { HomePage } from '../pages/HomePage'
 
 function Placeholder({ title }: { title: string }) {
   return <div style={{ padding: 24 }}>{title}</div>
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { index: true, element: <Placeholder title="Dashboard (todo)" /> },
+          { index: true, element: <HomePage /> },
           { path: 'projects', element: <ProjectsPage /> },
           { path: 'projects/:id', element: <ProjectPage /> },
           { path: 'tasks', element: <TasksPage /> },
@@ -33,6 +34,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  { path: '*', element: <Placeholder title="Not found" /> },
+  { path: '*', element: <Placeholder title="Страница не найдена" /> },
 ])
 

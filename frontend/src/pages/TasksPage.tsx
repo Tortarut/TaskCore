@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import * as core from '../api/core'
 import { TaskDetailsPanel } from '../components/TaskDetailsPanel'
+import { taskPriorityLabel, taskStatusLabel } from '../ui/labels'
 import { parseDrfError } from '../ui/parseDrfError'
 
 type EditingTask = (core.Task & { assignee_id?: number | null }) | null
@@ -201,13 +202,13 @@ export function TasksPage() {
               <label className="field">
                 <span>Приоритет</span>
                 <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as any)}>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
+                  <option value="low">Низкий</option>
+                  <option value="medium">Средний</option>
+                  <option value="high">Высокий</option>
                 </select>
               </label>
               <label className="field">
-                <span>Срок (due_date)</span>
+                <span>Срок</span>
                 <input type="date" value={newDue} onChange={(e) => setNewDue(e.target.value)} />
               </label>
             </div>
@@ -254,11 +255,11 @@ export function TasksPage() {
                 <span>Статус</span>
                 <select value={status} onChange={(e) => setStatus(e.target.value)}>
                   <option value="">—</option>
-                  <option value="todo">todo</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="review">review</option>
-                  <option value="done">done</option>
-                  <option value="cancelled">cancelled</option>
+                  <option value="todo">К выполнению</option>
+                  <option value="in_progress">В работе</option>
+                  <option value="review">На проверке</option>
+                  <option value="done">Готово</option>
+                  <option value="cancelled">Отменена</option>
                 </select>
               </label>
             </div>
@@ -267,34 +268,34 @@ export function TasksPage() {
                 <span>Приоритет</span>
                 <select value={priority} onChange={(e) => setPriority(e.target.value)}>
                   <option value="">—</option>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
+                  <option value="low">Низкий</option>
+                  <option value="medium">Средний</option>
+                  <option value="high">Высокий</option>
                 </select>
               </label>
               <label className="field">
                 <span>Сортировка</span>
                 <select value={ordering} onChange={(e) => setOrdering(e.target.value)}>
-                  <option value="-created_at">created_at desc</option>
-                  <option value="created_at">created_at asc</option>
-                  <option value="due_date">due_date asc</option>
-                  <option value="-due_date">due_date desc</option>
-                  <option value="priority">priority</option>
-                  <option value="status">status</option>
+                  <option value="-created_at">Сначала новые</option>
+                  <option value="created_at">Сначала старые</option>
+                  <option value="due_date">Срок: по возрастанию</option>
+                  <option value="-due_date">Срок: по убыванию</option>
+                  <option value="priority">По приоритету</option>
+                  <option value="status">По статусу</option>
                 </select>
               </label>
             </div>
             <label className="field">
-              <span>assignee (id)</span>
+              <span>Исполнитель (id)</span>
               <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="например 3" />
             </label>
             <div className="row">
               <label className="field">
-                <span>due_date_after</span>
+                <span>Срок не раньше</span>
                 <input type="date" value={dueAfter} onChange={(e) => setDueAfter(e.target.value)} />
               </label>
               <label className="field">
-                <span>due_date_before</span>
+                <span>Срок не позже</span>
                 <input type="date" value={dueBefore} onChange={(e) => setDueBefore(e.target.value)} />
               </label>
             </div>
@@ -307,7 +308,7 @@ export function TasksPage() {
 
       {error ? <div className="error">{error}</div> : null}
 
-      <section className="card">
+      <section className="card panel">
         <div className="table-head">
           <h3>Список</h3>
           <div className="pager">
@@ -324,27 +325,28 @@ export function TasksPage() {
         {isLoading ? (
           <div className="muted">Загрузка…</div>
         ) : (
-          <div className="table">
-            <div className="tr th">
-              <div>ID</div>
-              <div>Задача</div>
-              <div>Проект</div>
-              <div>Статус</div>
-              <div></div>
-            </div>
+          <div className="list-rows">
             {tasks.map((t) => (
-              <div key={t.id} className="tr">
-                <div className="mono">{t.id}</div>
-                <div>
-                  <div className="strong">{t.title}</div>
-                  <div className="muted">{t.description}</div>
-                  <div className="muted">
-                    prio: {t.priority} • due: {t.due_date ?? '—'} • assignee: {t.assignee?.email ?? '—'}
+              <div key={t.id} className="list-row">
+                <div className="list-row__id">#{t.id}</div>
+                <div className="list-row__main">
+                  <div className="list-row__title">{t.title}</div>
+                  {t.description ? <div className="list-row__desc">{t.description}</div> : null}
+                  <div className="list-row__meta">
+                    <span className="task-status-pill">{taskStatusLabel(t.status)}</span>
+                    <span>Приоритет: {taskPriorityLabel(t.priority)}</span>
+                    <span>Срок: {t.due_date ?? '—'}</span>
+                    <span>Исполнитель: {t.assignee?.email ?? '—'}</span>
+                    <span>Создано: {t.author?.email ?? '—'}</span>
                   </div>
                 </div>
-                <div className="muted">{projectMap.get(t.project) ?? `#${t.project}`}</div>
-                <div className="mono">{t.status}</div>
-                <div className="actions">
+                <div className="list-row__side">
+                  <span className="muted" style={{ fontSize: 13 }}>
+                    Проект
+                  </span>
+                  <span className="strong">{projectMap.get(t.project) ?? `#${t.project}`}</span>
+                </div>
+                <div className="list-row__actions">
                   <button
                     className="btn"
                     onClick={() =>
@@ -354,16 +356,16 @@ export function TasksPage() {
                       })
                     }
                   >
-                    Edit
+                    Редактировать
                   </button>
                   <button className="btn" onClick={() => setDetailsTaskId(t.id)}>
-                    Details
+                    Детали
                   </button>
                   <button className="btn" onClick={() => navigate(`/app/tasks/${t.id}`)}>
-                    Open
+                    Открыть
                   </button>
                   <button className="btn" onClick={() => void onDelete(t.id)}>
-                    Delete
+                    Удалить
                   </button>
                 </div>
               </div>
@@ -389,25 +391,25 @@ export function TasksPage() {
               <label className="field">
                 <span>Статус</span>
                 <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as any })}>
-                  <option value="todo">todo</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="review">review</option>
-                  <option value="done">done</option>
-                  <option value="cancelled">cancelled</option>
+                  <option value="todo">К выполнению</option>
+                  <option value="in_progress">В работе</option>
+                  <option value="review">На проверке</option>
+                  <option value="done">Готово</option>
+                  <option value="cancelled">Отменена</option>
                 </select>
               </label>
               <label className="field">
                 <span>Приоритет</span>
                 <select value={editing.priority} onChange={(e) => setEditing({ ...editing, priority: e.target.value as any })}>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
+                  <option value="low">Низкий</option>
+                  <option value="medium">Средний</option>
+                  <option value="high">Высокий</option>
                 </select>
               </label>
             </div>
             <div className="row">
               <label className="field">
-                <span>due_date</span>
+                <span>Срок</span>
                 <input
                   type="date"
                   value={editing.due_date ?? ''}
@@ -415,7 +417,7 @@ export function TasksPage() {
                 />
               </label>
               <label className="field">
-                <span>assignee_id</span>
+                <span>Исполнитель (id)</span>
                 <input
                   value={editing.assignee_id === null || editing.assignee_id === undefined ? '' : String(editing.assignee_id)}
                   onChange={(e) =>
