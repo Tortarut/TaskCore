@@ -14,10 +14,6 @@ def get_current_user():
 
 @contextmanager
 def audit_actor(user):
-    """
-    Thread-local user for Task post_save audit (JWT is applied in DRF after Django middleware,
-    so middleware alone cannot see request.user).
-    """
     prev = get_current_user()
     set_current_user(user)
     try:
