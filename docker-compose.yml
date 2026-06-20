@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: vaultix
-      POSTGRES_USER: vaultix
-      POSTGRES_PASSWORD: vaultix
+      POSTGRES_DB: ${POSTGRES_DB:-taskcore}
+      POSTGRES_USER: ${POSTGRES_USER:-taskcore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskcore_dev_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vaultix -d vaultix"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -19,14 +19,14 @@ services:
     environment:
       DJANGO_DEBUG: "${DJANGO_DEBUG:-0}"
       DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}"
-      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-change-me}"
-      POSTGRES_DB: vaultix
-      POSTGRES_USER: vaultix
-      POSTGRES_PASSWORD: vaultix
-      POSTGRES_HOST: db
-      POSTGRES_PORT: "5432"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-django-insecure-local-dev-only}"
+      POSTGRES_DB: ${POSTGRES_DB:-taskcore}
+      POSTGRES_USER: ${POSTGRES_USER:-taskcore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskcore_dev_password}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     ports:
-      - "8001:8000"
+      - "${BACKEND_HOST_PORT:-8001}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -37,12 +37,12 @@ services:
     environment:
       DJANGO_DEBUG: "${DJANGO_DEBUG:-0}"
       DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}"
-      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-change-me}"
-      POSTGRES_DB: vaultix
-      POSTGRES_USER: vaultix
-      POSTGRES_PASSWORD: vaultix
-      POSTGRES_HOST: db
-      POSTGRES_PORT: "5432"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-django-insecure-local-dev-only}"
+      POSTGRES_DB: ${POSTGRES_DB:-taskcore}
+      POSTGRES_USER: ${POSTGRES_USER:-taskcore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskcore_dev_password}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     depends_on:
       db:
         condition: service_healthy
@@ -54,10 +54,9 @@ services:
       args:
         VITE_API_URL: "/api"
     ports:
-      - "3000:80"
+      - "${FRONTEND_HOST_PORT:-3000}:80"
     depends_on:
       - backend
 
 volumes:
   postgres_data:
-

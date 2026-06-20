@@ -195,6 +195,16 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'TaskCore backend API (DRF)',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'jwtAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            },
+        },
+    },
+    'SECURITY': [{'jwtAuth': []}],
 }
 
 SIMPLE_JWT = {
