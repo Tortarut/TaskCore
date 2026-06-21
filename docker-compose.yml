@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-taskcore}
-      POSTGRES_USER: ${POSTGRES_USER:-taskcore}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskcore_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,12 +17,12 @@ services:
     build:
       context: ./backend
     environment:
-      DJANGO_DEBUG: "${DJANGO_DEBUG:-0}"
-      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}"
-      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-django-insecure-local-dev-only}"
-      POSTGRES_DB: ${POSTGRES_DB:-taskcore}
-      POSTGRES_USER: ${POSTGRES_USER:-taskcore}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskcore_dev_password}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: ${POSTGRES_HOST:-db}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     ports:
@@ -35,12 +35,12 @@ services:
     build:
       context: ./backend
     environment:
-      DJANGO_DEBUG: "${DJANGO_DEBUG:-0}"
-      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}"
-      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-django-insecure-local-dev-only}"
-      POSTGRES_DB: ${POSTGRES_DB:-taskcore}
-      POSTGRES_USER: ${POSTGRES_USER:-taskcore}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskcore_dev_password}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: ${POSTGRES_HOST:-db}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     depends_on:
