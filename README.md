@@ -103,6 +103,28 @@ docker compose run --rm backend python manage.py shell
 
 Конфигурация: `.github/workflows/ci.yml`
 
+## CD (деплой по кнопке)
+
+Workflow **Deploy** запускается вручную: GitHub → **Actions** → **Deploy** → **Run workflow**.
+
+На сервере в каталоге проекта (по умолчанию `/opt/taskcore`) должны быть: git-клон репозитория, файл `.env`, Docker и Docker Compose.
+
+Workflow выполняет: `git pull` → `docker compose run --rm backend-migrate` → `docker compose up -d --build` → проверка `/api/schema/`.
+
+### Secrets (Settings → Secrets and variables → Actions)
+
+| Secret | Обязательный | Пример |
+|--------|--------------|--------|
+| `SSH_HOST` | да | IP или домен VPS |
+| `SSH_USER` | да | `deploy` |
+| `SSH_PRIVATE_KEY` | да | приватный SSH-ключ |
+| `SSH_PORT` | нет | `22` |
+| `DEPLOY_PATH` | нет | `/opt/taskcore` |
+
+Пароли БД и `DJANGO_SECRET_KEY` хранятся в `.env` **на сервере**, не в GitHub.
+
+Конфигурация: `.github/workflows/deploy.yml`
+
 ## Тестирование серверной части
 
 ### Модульные и интеграционные тесты (Django test runner)
