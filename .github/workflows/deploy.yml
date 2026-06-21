@@ -33,5 +33,19 @@ jobs:
             docker compose run --rm backend-migrate
             docker compose up -d --build
 
-            curl -fsS http://127.0.0.1:3000/api/schema/ > /dev/null
+            echo "Waiting for API (backend may need up to ~60s for DB)..."
+            ok=0
+            for i in $(seq 1 45); do
+              if curl -fsS http://127.0.0.1:3000/api/schema/ > /dev/null 2>&1; then
+                ok=1
+                break
+              fi
+              sleep 2
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Health check failed after 90s"
+              docker compose ps
+              docker compose logs --tail=40 backend frontend
+              exit 1
+            fi
             echo "Deploy finished: $REF"
