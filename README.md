@@ -103,7 +103,7 @@ docker compose run --rm backend python manage.py shell
 
 Конфигурация: `.github/workflows/ci.yml`
 
-## CD (деплой по кнопке)
+## CD
 
 Workflow **Deploy** запускается вручную: GitHub → **Actions** → **Deploy** → **Run workflow**.
 
