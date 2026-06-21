@@ -26,7 +26,22 @@ def _env_bool(name: str, default: bool) -> bool:
     return v.strip().lower() in ('1', 'true', 'yes', 'y', 'on')
 
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev')
+def _django_manage_test() -> bool:
+    return 'test' in sys.argv
+
+
+def _running_tests() -> bool:
+    if os.environ.get('PYTEST_CURRENT_TEST'):
+        return True
+    if _django_manage_test():
+        return True
+    return Path(sys.argv[0]).name.startswith('pytest')
+
+
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-local-dev-only-not-for-production',
+)
 
 DEBUG = _env_bool('DJANGO_DEBUG', True)
 
@@ -136,7 +151,12 @@ LOGGING = {
     },
 }
 
-logging.getLogger('taskcore.startup').info('database at startup - %s', _db_choice)
+if _django_manage_test():
+    LOGGING['loggers']['django.request']['level'] = 'ERROR'
+    LOGGING['root']['level'] = 'ERROR'
+
+if not _running_tests():
+    logging.getLogger('taskcore.startup').info('database at startup - %s', _db_choice)
 
 
 AUTH_PASSWORD_VALIDATORS = [

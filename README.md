@@ -169,7 +169,7 @@ pytest -k openapi_fuzz --html fuzz-report.html --self-contained-html
 
 ```bash
 cd backend
-python -m http.server 8009
+python -m http.server <port>
 ```
 
-После этого откройте в браузере: `http://127.0.0.1:8009/fuzz-report.html`.
+После этого откройте в браузере: `http://127.0.0.1:<port>/fuzz-report.html`.
